@@ -1,29 +1,35 @@
 package main
 
 import (
-	"log"
-
 	"github.com/joho/godotenv"
 
-	"ecommerce-be/internal/config"
-	"ecommerce-be/internal/infrastructure/database"
+	"e-commerce/internal/config"
+	"e-commerce/internal/infrastructure/database"
+	"e-commerce/internal/infrastructure/logger"
 )
 
 func main() {
-	// load .env
+	// init logger sekali saja
+	logger.InitLogger()
+
+	// load env
 	err := godotenv.Load()
 	if err != nil {
-		log.Println("No .env file found")
+		logger.ErrorLogger.Println("No .env file found")
 	}
 
 	// load config
 	cfg := config.LoadConfig()
 
+	logger.InfoLogger.Println("Starting application...")
+
 	// connect DB
 	db, err := database.NewPostgresDB(cfg)
 	if err != nil {
-		log.Fatal(err)
+		logger.ErrorLogger.Fatal("DB connection failed:", err)
 	}
 
 	defer db.Close()
+
+	logger.InfoLogger.Println("Application started successfully")
 }

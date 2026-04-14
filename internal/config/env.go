@@ -2,14 +2,6 @@ package config
 
 import "os"
 
-type Config struct {
-	DBHost     string
-	DBPort     string
-	DBUser     string
-	DBPassword string
-	DBName     string
-}
-
 func LoadConfig() *Config {
 	return &Config{
 		DBHost:     os.Getenv("DB_HOST"),
