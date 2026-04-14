@@ -1,0 +1,28 @@
+package app
+
+import (
+	"database/sql"
+
+	"e-commerce/internal/handler"
+	"e-commerce/internal/repository/postgres"
+	"e-commerce/internal/usecase"
+)
+
+type Container struct {
+	UserHandler *handler.UserHandler
+}
+
+func NewContainer(db *sql.DB) *Container {
+	// repo
+	userRepo := postgres.NewUserRepository(db)
+
+	// usecase
+	userUsecase := usecase.NewUserUsecase(userRepo)
+
+	// handler
+	userHandler := handler.NewUserHandler(userUsecase)
+
+	return &Container{
+		UserHandler: userHandler,
+	}
+}

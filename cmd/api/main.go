@@ -3,13 +3,13 @@ package main
 import (
 	"github.com/joho/godotenv"
 
+	"e-commerce/internal/app"
 	"e-commerce/internal/config"
-	"e-commerce/internal/infrastructure/database"
 	"e-commerce/internal/infrastructure/logger"
 )
 
 func main() {
-	// init logger sekali saja
+	// init logger
 	logger.InitLogger()
 
 	// load env
@@ -21,15 +21,7 @@ func main() {
 	// load config
 	cfg := config.LoadConfig()
 
-	logger.InfoLogger.Println("Starting application...")
-
-	// connect DB
-	db, err := database.NewPostgresDB(cfg)
-	if err != nil {
-		logger.ErrorLogger.Fatal("DB connection failed:", err)
-	}
-
-	defer db.Close()
-
-	logger.InfoLogger.Println("Application started successfully")
+	// start app
+	application := app.NewApp(cfg)
+	application.Start()
 }
