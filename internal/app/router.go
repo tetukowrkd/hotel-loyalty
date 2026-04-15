@@ -9,9 +9,9 @@ import (
 func SetupRouter(c *Container) http.Handler {
 	r := chi.NewRouter()
 
-	r.Route("/users", func(r chi.Router) {
+	r.Route("/auth", func(r chi.Router) {
 		r.Post("/register", c.UserHandler.Register)
-		// r.Post("/login", c.UserHandler.Login)
+		r.Post("/login", c.UserHandler.Login)
 	})
 
 	return r

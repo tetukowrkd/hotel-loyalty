@@ -64,3 +64,37 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	// success
 	response.WriteJSON(w, http.StatusCreated, model.Success("User Registered", nil))
 }
+
+func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	var req request.LoginRequest
+
+	// decode
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.WriteJSON(w, http.StatusBadRequest, model.Error("Invalid request body", nil))
+		return
+	}
+
+	// validation
+	if !ValidateRequest(w, req) {
+		return
+	}
+
+	// usecase
+	token, err := h.userUsecase.Login(req.Email, req.Password)
+	if err != nil {
+		if appErr, ok := err.(*errors.AppError); ok {
+			response.WriteJSON(w, appErr.Code, model.Error(appErr.Message, nil))
+			return
+		}
+
+		response.WriteJSON(w, http.StatusInternalServerError, model.Error("Internal Server Error", nil))
+		return
+	}
+
+	// success
+	response.WriteJSON(w, http.StatusOK, model.Success("Login Success", map[string]string{
+		"token": token,
+	}))
+}

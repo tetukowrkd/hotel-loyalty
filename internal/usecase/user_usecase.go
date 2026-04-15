@@ -5,6 +5,7 @@ import (
 	"e-commerce/internal/infrastructure/logger"
 	"e-commerce/internal/pkg/errors"
 	"e-commerce/internal/pkg/hash"
+	"e-commerce/internal/pkg/jwt"
 	"e-commerce/internal/repository"
 )
 
@@ -51,4 +52,30 @@ func (u *UserUsecase) Register(user *domain.User) error {
 	logger.InfoLogger.Println("[USER_USECASE][Register] User Created:", user.Email)
 
 	return nil
+}
+
+func (u *UserUsecase) Login(email, password string) (string, error) {
+	// 1. ambil user
+	user, err := u.userRepo.GetByEmail(email)
+	if err != nil {
+		logger.ErrorLogger.Println("[USER_USECASE][Login] GetByEmail:", err)
+		return "", errors.ErrInternal
+	}
+
+	if user == nil {
+		return "", errors.ErrBadRequest
+	}
+
+	// 2. compare password
+	if !hash.CheckPassword(password, user.Password) {
+		return "", errors.ErrBadRequest
+	}
+
+	// 3. generate token
+	token, err := jwt.GenerateToken(user.ID.String(), user.Email)
+	if err != nil {
+		return "", errors.ErrInternal
+	}
+
+	return token, nil
 }
