@@ -15,9 +15,10 @@ type Container struct {
 func NewContainer(db *sql.DB) *Container {
 	// repo
 	userRepo := postgres.NewUserRepository(db)
+	tokenRepo := postgres.NewTokenRepository(db)
 
 	// usecase
-	userUsecase := usecase.NewUserUsecase(userRepo)
+	userUsecase := usecase.NewUserUsecase(userRepo, tokenRepo)
 
 	// handler
 	userHandler := handler.NewUserHandler(userUsecase)

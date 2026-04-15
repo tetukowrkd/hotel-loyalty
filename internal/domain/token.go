@@ -2,11 +2,13 @@ package domain
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type UserToken struct {
-	ID           string
-	UserID       string
+	ID           uuid.UUID
+	UserID       uuid.UUID
 	RefreshToken string
 	UserAgent    string
 	IPAddress    string

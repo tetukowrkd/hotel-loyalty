@@ -19,7 +19,7 @@ func NewUserRepository(db *sql.DB) *userRepository {
 
 func (r *userRepository) Create(user *domain.User) error {
 	query := `
-		INSERT INTO users (id, name, email, password, is_active, created_at, updated_at)
+		INSERT INTO users (id, name, email, password, is_active, created_at, updated_at, role)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 	`
 
@@ -36,6 +36,7 @@ func (r *userRepository) Create(user *domain.User) error {
 		user.IsActive,
 		user.CreatedAt,
 		user.UpdatedAt,
+		user.Role,
 	)
 
 	if err != nil {
@@ -48,7 +49,7 @@ func (r *userRepository) Create(user *domain.User) error {
 
 func (r *userRepository) GetByEmail(email string) (*domain.User, error) {
 	query := `
-		SELECT id, name, email, password, is_active, created_at, updated_at
+		SELECT id, name, email, password, is_active, created_at, updated_at, role
 		FROM users
 		WHERE email = $1
 	`
@@ -65,6 +66,41 @@ func (r *userRepository) GetByEmail(email string) (*domain.User, error) {
 		&user.IsActive,
 		&user.CreatedAt,
 		&user.UpdatedAt,
+		&user.Role,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			logger.ErrorLogger.Println(err)
+			return nil, nil
+		}
+		logger.ErrorLogger.Println(err)
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (r *userRepository) GetByID(email string) (*domain.User, error) {
+	query := `
+		SELECT id, name, email, password, is_active, created_at, updated_at, role
+		FROM users
+		WHERE id = $1
+	`
+
+	row := r.db.QueryRow(query, email)
+
+	var user domain.User
+
+	err := row.Scan(
+		&user.ID,
+		&user.Name,
+		&user.Email,
+		&user.Password,
+		&user.IsActive,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+		&user.Role,
 	)
 
 	if err != nil {
