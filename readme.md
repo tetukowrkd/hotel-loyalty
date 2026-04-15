@@ -1,6 +1,6 @@
-# 🛒 E-Commerce Backend (Golang)
+# 🛒 hotel-loyalty Backend (Golang)
 
-Backend service untuk aplikasi e-commerce yang dibangun menggunakan **Golang** dengan pendekatan **Clean Architecture**.  
+Backend service untuk aplikasi hotel-loyalty yang dibangun menggunakan **Golang** dengan pendekatan **Clean Architecture**.  
 Project ini dirancang dari awal untuk **scalable, maintainable, dan production-ready**.
 
 ---

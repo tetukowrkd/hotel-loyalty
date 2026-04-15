@@ -3,9 +3,9 @@ package app
 import (
 	"database/sql"
 
-	"e-commerce/internal/delivery/http/handler"
-	"e-commerce/internal/repository/postgres"
-	"e-commerce/internal/usecase"
+	"hotel-loyalty/internal/delivery/http/handler"
+	"hotel-loyalty/internal/repository/postgres"
+	"hotel-loyalty/internal/usecase"
 )
 
 type Container struct {

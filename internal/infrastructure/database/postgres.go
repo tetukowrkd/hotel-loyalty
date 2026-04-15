@@ -2,9 +2,9 @@ package database
 
 import (
 	"database/sql"
-	"e-commerce/internal/config"
-	"e-commerce/internal/infrastructure/logger"
 	"fmt"
+	"hotel-loyalty/internal/config"
+	"hotel-loyalty/internal/infrastructure/logger"
 	"time"
 
 	_ "github.com/lib/pq"

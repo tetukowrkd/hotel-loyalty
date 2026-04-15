@@ -3,9 +3,9 @@ package main
 import (
 	"github.com/joho/godotenv"
 
-	"e-commerce/internal/app"
-	"e-commerce/internal/config"
-	"e-commerce/internal/infrastructure/logger"
+	"hotel-loyalty/internal/app"
+	"hotel-loyalty/internal/config"
+	"hotel-loyalty/internal/infrastructure/logger"
 )
 
 func main() {

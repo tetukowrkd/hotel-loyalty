@@ -3,9 +3,9 @@ package handler
 import (
 	"net/http"
 
-	"e-commerce/internal/model"
-	"e-commerce/internal/model/response"
-	"e-commerce/internal/pkg/validator"
+	"hotel-loyalty/internal/model"
+	"hotel-loyalty/internal/model/response"
+	"hotel-loyalty/internal/pkg/validator"
 )
 
 // reusable validation helper

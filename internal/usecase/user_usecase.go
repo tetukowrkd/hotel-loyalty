@@ -1,12 +1,12 @@
 package usecase
 
 import (
-	"e-commerce/internal/domain"
-	"e-commerce/internal/infrastructure/logger"
-	"e-commerce/internal/pkg/errors"
-	"e-commerce/internal/pkg/hash"
-	"e-commerce/internal/pkg/jwt"
-	"e-commerce/internal/repository"
+	"hotel-loyalty/internal/domain"
+	"hotel-loyalty/internal/infrastructure/logger"
+	"hotel-loyalty/internal/pkg/errors"
+	"hotel-loyalty/internal/pkg/hash"
+	"hotel-loyalty/internal/pkg/jwt"
+	"hotel-loyalty/internal/repository"
 )
 
 type UserUsecase struct {

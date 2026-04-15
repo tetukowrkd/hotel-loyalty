@@ -3,9 +3,9 @@ package app
 import (
 	"net/http"
 
-	"e-commerce/internal/config"
-	"e-commerce/internal/infrastructure/database"
-	"e-commerce/internal/infrastructure/logger"
+	"hotel-loyalty/internal/config"
+	"hotel-loyalty/internal/infrastructure/database"
+	"hotel-loyalty/internal/infrastructure/logger"
 )
 
 type App struct {

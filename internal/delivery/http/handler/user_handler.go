@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"e-commerce/internal/domain"
-	"e-commerce/internal/infrastructure/logger"
-	"e-commerce/internal/model"
-	"e-commerce/internal/model/request"
-	"e-commerce/internal/model/response"
-	"e-commerce/internal/pkg/errors"
-	"e-commerce/internal/usecase"
+	"hotel-loyalty/internal/domain"
+	"hotel-loyalty/internal/infrastructure/logger"
+	"hotel-loyalty/internal/model"
+	"hotel-loyalty/internal/model/request"
+	"hotel-loyalty/internal/model/response"
+	"hotel-loyalty/internal/pkg/errors"
+	"hotel-loyalty/internal/usecase"
 )
 
 type UserHandler struct {

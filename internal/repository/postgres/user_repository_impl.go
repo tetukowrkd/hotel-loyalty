@@ -2,8 +2,8 @@ package postgres
 
 import (
 	"database/sql"
-	"e-commerce/internal/domain"
-	"e-commerce/internal/infrastructure/logger"
+	"hotel-loyalty/internal/domain"
+	"hotel-loyalty/internal/infrastructure/logger"
 	"time"
 
 	"github.com/google/uuid"

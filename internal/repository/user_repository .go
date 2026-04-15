@@ -1,6 +1,6 @@
 package repository
 
-import "e-commerce/internal/domain"
+import "hotel-loyalty/internal/domain"
 
 type UserRepository interface {
 	Create(user *domain.User) error
