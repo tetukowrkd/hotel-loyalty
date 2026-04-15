@@ -28,8 +28,7 @@ func (a *App) Start() {
 	container := NewContainer(db)
 
 	// router
-	NewRouter(container)
-
+	router := SetupRouter(container)
 	logger.InfoLogger.Println("Server running on :8080")
-	http.ListenAndServe(":8080", nil)
+	http.ListenAndServe(":8080", router)
 }

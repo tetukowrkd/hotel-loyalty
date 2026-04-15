@@ -69,6 +69,7 @@ func (r *userRepository) GetByEmail(email string) (*domain.User, error) {
 
 	if err != nil {
 		if err == sql.ErrNoRows {
+			logger.ErrorLogger.Println(err)
 			return nil, nil
 		}
 		logger.ErrorLogger.Println(err)

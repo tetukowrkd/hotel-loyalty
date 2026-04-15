@@ -3,7 +3,7 @@ package app
 import (
 	"database/sql"
 
-	"e-commerce/internal/handler"
+	"e-commerce/internal/delivery/http/handler"
 	"e-commerce/internal/repository/postgres"
 	"e-commerce/internal/usecase"
 )

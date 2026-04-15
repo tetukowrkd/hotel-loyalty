@@ -3,7 +3,7 @@ package model
 // Success response helper
 func Success(message string, data interface{}) BaseResponse {
 	return BaseResponse{
-		Status:  "success",
+		Status:  "Success",
 		Message: message,
 		Data:    data,
 	}
@@ -12,7 +12,7 @@ func Success(message string, data interface{}) BaseResponse {
 // Error response helper
 func Error(message string, err interface{}) BaseResponse {
 	return BaseResponse{
-		Status:  "error",
+		Status:  "Error",
 		Message: message,
 		Error:   err,
 	}
