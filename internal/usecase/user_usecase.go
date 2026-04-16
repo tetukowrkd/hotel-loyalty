@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"encoding/base64"
 	"time"
 
 	"github.com/google/uuid"
@@ -13,6 +14,7 @@ import (
 	"hotel-loyalty/internal/pkg/errors"
 	"hotel-loyalty/internal/pkg/generator"
 	"hotel-loyalty/internal/pkg/hash"
+	"hotel-loyalty/internal/pkg/qrcode"
 	"hotel-loyalty/internal/repository"
 )
 
@@ -52,7 +54,7 @@ func (u *UserUsecase) Register(user *domain.User) (*response.RegisterUserRespons
 	// 🔥 default role
 	memberRoleID := uuid.MustParse("11111111-1111-1111-1111-111111111111")
 	user.RoleID = &memberRoleID
-	user.RoleName = "member" // 🔥 penting buat prefix
+	user.RoleName = "member"
 
 	var createErr error
 
@@ -146,10 +148,6 @@ func (u *UserUsecase) Logout(refreshToken string) error {
 	return nil
 }
 
-func (u *UserUsecase) GetProfile(userID string) (*domain.User, error) {
-	return u.userRepo.GetByID(userID)
-}
-
 func (u *UserUsecase) RefreshToken(refreshToken string) (*response.RefreshResponse, error) {
 	hashedToken := hash.HashToken(refreshToken)
 
@@ -209,4 +207,40 @@ func (u *UserUsecase) RefreshToken(refreshToken string) (*response.RefreshRespon
 		RefreshToken: newRefreshToken, // 🔥 FIXED
 		ExpiresIn:    accessTTL,
 	}, nil
+}
+
+func (u *UserUsecase) GetProfile(userID string) (*domain.User, error) {
+	return u.userRepo.GetByID(userID)
+}
+
+func (u *UserUsecase) GetMemberQR(userID string) (string, error) {
+	logger.InfoLogger.Println("[USER_USECASE][GetMemberQR] start userID:", userID)
+
+	user, err := u.userRepo.GetByID(userID)
+	if err != nil {
+		logger.ErrorLogger.Println("[USER_USECASE][GetMemberQR][GetByID] error:", err)
+		return "", errors.ErrInternal
+	}
+
+	if user == nil {
+		logger.InfoLogger.Println("[USER_USECASE][GetMemberQR] user not found:", userID)
+		return "", errors.ErrNotFound
+	}
+
+	if user.MemberCode == "" {
+		logger.ErrorLogger.Println("[USER_USECASE][GetMemberQR] empty member_code user:", userID)
+		return "", errors.ErrInternal
+	}
+
+	png, err := qrcode.GenerateQRCode(user.MemberCode)
+	if err != nil {
+		logger.ErrorLogger.Println("[USER_USECASE][GetMemberQR][GenerateQR] error:", err)
+		return "", errors.ErrInternal
+	}
+
+	qrBase64 := base64.StdEncoding.EncodeToString(png)
+
+	logger.InfoLogger.Println("[USER_USECASE][GetMemberQR] success userID:", userID)
+
+	return qrBase64, nil
 }

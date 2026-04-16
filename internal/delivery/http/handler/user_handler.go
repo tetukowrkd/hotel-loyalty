@@ -12,7 +12,6 @@ import (
 	"hotel-loyalty/internal/model/request"
 	"hotel-loyalty/internal/model/response"
 	"hotel-loyalty/internal/pkg/errors"
-	"hotel-loyalty/internal/pkg/qrcode"
 	"hotel-loyalty/internal/usecase"
 )
 
@@ -193,59 +192,36 @@ func (h *UserHandler) Profile(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) GetMemberQR(w http.ResponseWriter, r *http.Request) {
+	logger.InfoLogger.Println("[HANDLER][GetMemberQR] hit")
+
 	claims, ok := r.Context().Value(middleware.UserContextKey).(*jwt.Claims)
 	if !ok {
-		logger.ErrorLogger.Println("[HANDLER][GetMemberQR] unauthorized access")
-
+		logger.ErrorLogger.Println("[HANDLER][GetMemberQR] unauthorized")
 		response.WriteJSON(w, http.StatusUnauthorized, model.Error("Unauthorized", nil))
 		return
 	}
 
-	logger.InfoLogger.Println(
-		"[HANDLER][GetMemberQR] request",
-		"userID=", claims.UserID,
-	)
+	userID := claims.UserID
+	logger.InfoLogger.Println("[HANDLER][GetMemberQR] userID:", userID)
 
-	user, err := h.userUsecase.GetProfile(claims.UserID)
+	qr, err := h.userUsecase.GetMemberQR(userID)
 	if err != nil {
-		logger.ErrorLogger.Println(
-			"[HANDLER][GetMemberQR] get profile failed",
-			"error=", err,
-			"userID=", claims.UserID,
-		)
+		logger.ErrorLogger.Println("[HANDLER][GetMemberQR] error:", err)
+
+		if appErr, ok := err.(*errors.AppError); ok {
+			response.WriteJSON(w, appErr.Code, model.Error(appErr.Message, nil))
+			return
+		}
 
 		response.WriteJSON(w, http.StatusInternalServerError, model.Error("Internal Server Error", nil))
 		return
 	}
 
-	if user == nil {
-		logger.ErrorLogger.Println(
-			"[HANDLER][GetMemberQR] user not found",
-			"userID=", claims.UserID,
-		)
-
-		response.WriteJSON(w, http.StatusNotFound, model.Error("User not found", nil))
-		return
+	resp := response.QRResponse{
+		QRCode: qr,
 	}
 
-	qrBytes, err := qrcode.GenerateQRCode(user.MemberCode)
-	if err != nil {
-		logger.ErrorLogger.Println(
-			"[HANDLER][GetMemberQR] QR generation failed",
-			"error=", err,
-			"member_code=", user.MemberCode,
-		)
+	logger.InfoLogger.Println("[HANDLER][GetMemberQR] success userID:", userID)
 
-		response.WriteJSON(w, http.StatusInternalServerError, model.Error("Failed generate QR", nil))
-		return
-	}
-
-	logger.InfoLogger.Println(
-		"[HANDLER][GetMemberQR] success",
-		"userID=", claims.UserID,
-		"member_code=", user.MemberCode,
-	)
-
-	w.Header().Set("Content-Type", "image/png")
-	w.Write(qrBytes)
+	response.WriteJSON(w, http.StatusOK, model.Success("QR Generated", resp))
 }

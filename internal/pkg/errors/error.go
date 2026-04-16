@@ -27,4 +27,19 @@ var (
 		Code:    http.StatusBadRequest,
 		Message: "Email Already Exists",
 	}
+
+	ErrNotFound = &AppError{
+		Code:    http.StatusNotFound,
+		Message: "Resource Not Found",
+	}
+
+	ErrUnauthorized = &AppError{
+		Code:    http.StatusUnauthorized,
+		Message: "Unauthorized",
+	}
+
+	ErrForbidden = &AppError{
+		Code:    http.StatusForbidden,
+		Message: "Forbidden",
+	}
 )

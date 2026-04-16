@@ -22,6 +22,7 @@ const baseUserQuery = `
 		u.role_id,
 		r.name AS role_name,
 		u.phone,
+		u.member_code,
 		u.is_active,
 		u.created_at,
 		u.updated_at
@@ -36,10 +37,10 @@ func NewUserRepository(db *sql.DB) *userRepository {
 func (r *userRepository) Create(user *domain.User) error {
 	query := `
 		INSERT INTO users (
-			id, name, email, password, role_id, phone,
+			id, name, email, password, role_id, phone, member_code,
 			is_active, created_at, updated_at
 		)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
 	`
 
 	user.ID = uuid.New()
@@ -54,6 +55,7 @@ func (r *userRepository) Create(user *domain.User) error {
 		user.Password,
 		user.RoleID,
 		user.Phone,
+		user.MemberCode,
 		user.IsActive,
 		user.CreatedAt,
 		user.UpdatedAt,
@@ -84,6 +86,7 @@ func (r *userRepository) GetByEmail(email string) (*domain.User, error) {
 		&user.RoleID,
 		&user.RoleName,
 		&user.Phone,
+		&user.MemberCode,
 		&user.IsActive,
 		&user.CreatedAt,
 		&user.UpdatedAt,
@@ -117,6 +120,7 @@ func (r *userRepository) GetByID(id string) (*domain.User, error) {
 		&user.RoleID,
 		&user.RoleName,
 		&user.Phone,
+		&user.MemberCode,
 		&user.IsActive,
 		&user.CreatedAt,
 		&user.UpdatedAt,
