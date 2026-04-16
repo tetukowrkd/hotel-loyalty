@@ -18,15 +18,21 @@ func SetupRouter(c *Container) http.Handler {
 		r.Post("/refresh", c.UserHandler.RefreshToken)
 	})
 
-	r.Route("/api", func(r chi.Router) {
+	r.Route("/member", func(r chi.Router) {
 		r.Use(middleware.JWTMiddleware)
 
 		r.Get("/profile", c.UserHandler.Profile)
-		// 🔥 admin only
-		//r.With(middleware.RequireRole("admin")).Get("/admin/dashboard", adminHandler.Dashboard)
+		r.Get("/qr", c.UserHandler.GetMemberQR)
+	})
 
+	r.Route("/staff", func(r chi.Router) {
 		// 🔥 staff + admin
 		//r.With(middleware.RequireRole("staff", "admin")).Post("/checkin", checkinHandler.Validate)
+	})
+
+	r.Route("/admin", func(r chi.Router) {
+		// 🔥 admin only
+		//r.With(middleware.RequireRole("admin")).Get("/dashboard", adminHandler.Dashboard)
 	})
 
 	return r

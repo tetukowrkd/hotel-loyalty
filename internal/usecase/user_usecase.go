@@ -11,6 +11,7 @@ import (
 	"hotel-loyalty/internal/mapper"
 	"hotel-loyalty/internal/model/response"
 	"hotel-loyalty/internal/pkg/errors"
+	"hotel-loyalty/internal/pkg/generator"
 	"hotel-loyalty/internal/pkg/hash"
 	"hotel-loyalty/internal/repository"
 )
@@ -30,31 +31,61 @@ func NewUserUsecase(userRepo repository.UserRepository, tokenRepo repository.Tok
 func (u *UserUsecase) Register(user *domain.User) (*response.RegisterUserResponse, error) {
 	existingUser, err := u.userRepo.GetByEmail(user.Email)
 	if err != nil {
-		logger.ErrorLogger.Println("[USER_USECASE][GetByEmail] Error:", err)
+		logger.ErrorLogger.Println("[USER_USECASE][Register][GetByEmail] error:", err)
 		return nil, errors.ErrInternal
 	}
 
 	if existingUser != nil {
+		logger.InfoLogger.Println("[USER_USECASE][Register] email exists:", user.Email)
 		return nil, errors.ErrEmailExists
 	}
 
 	hashedPassword, err := hash.HashPassword(user.Password)
 	if err != nil {
+		logger.ErrorLogger.Println("[USER_USECASE][Register][HashPassword] error:", err)
 		return nil, errors.ErrInternal
 	}
 
 	user.Password = hashedPassword
 	user.IsActive = true
 
-	// 🔥 SET DEFAULT ROLE (USER)
+	// 🔥 default role
 	memberRoleID := uuid.MustParse("11111111-1111-1111-1111-111111111111")
 	user.RoleID = &memberRoleID
+	user.RoleName = "member" // 🔥 penting buat prefix
 
-	if err := u.userRepo.Create(user); err != nil {
-		return nil, errors.ErrInternal
+	var createErr error
+
+	for i := 0; i < 3; i++ {
+		user.MemberCode = generator.GenerateMemberCode(user.RoleName)
+
+		createErr = u.userRepo.Create(user)
+		if createErr == nil {
+			logger.InfoLogger.Println(
+				"[USER_USECASE][Register] success",
+				"email=", user.Email,
+				"member_code=", user.MemberCode,
+				"attempt=", i+1,
+			)
+
+			return mapper.ToRegisterResponse(user), nil
+		}
+
+		logger.ErrorLogger.Println(
+			"[USER_USECASE][Register] create failed",
+			"attempt=", i+1,
+			"error=", createErr,
+		)
 	}
 
-	return mapper.ToRegisterResponse(user), nil
+	// 🔥 kalau semua retry gagal
+	logger.ErrorLogger.Println(
+		"[USER_USECASE][Register] failed after retries",
+		"email=", user.Email,
+		"error=", createErr,
+	)
+
+	return nil, errors.ErrInternal
 }
 
 func (u *UserUsecase) Login(email, password string) (*response.LoginResponse, error) {

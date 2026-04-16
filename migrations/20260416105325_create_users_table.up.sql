@@ -7,6 +7,7 @@ CREATE TABLE users (
     role_id UUID,
 
     phone TEXT UNIQUE,
+    member_code VARCHAR(20) UNIQUE NOT NULL,
 
     is_active BOOLEAN DEFAULT TRUE,
     is_deleted BOOLEAN DEFAULT FALSE,

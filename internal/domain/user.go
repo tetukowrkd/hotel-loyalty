@@ -15,7 +15,8 @@ type User struct {
 	RoleID   *uuid.UUID `json:"role_id"`
 	RoleName string     `json:"role_name"`
 
-	Phone string `json:"phone"`
+	Phone      string `json:"phone"`
+	MemberCode string `json:"member_code"`
 
 	IsActive  bool `json:"is_active"`
 	IsDeleted bool `json:"is_deleted"`
