@@ -13,14 +13,33 @@ type userRepository struct {
 	db *sql.DB
 }
 
+const baseUserQuery = `
+	SELECT 
+		u.id,
+		u.name,
+		u.email,
+		u.password,
+		u.role_id,
+		r.name AS role_name,
+		u.phone,
+		u.is_active,
+		u.created_at,
+		u.updated_at
+	FROM users u
+	LEFT JOIN roles r ON u.role_id = r.id
+`
+
 func NewUserRepository(db *sql.DB) *userRepository {
 	return &userRepository{db: db}
 }
 
 func (r *userRepository) Create(user *domain.User) error {
 	query := `
-		INSERT INTO users (id, name, email, password, is_active, created_at, updated_at, role)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO users (
+			id, name, email, password, role_id, phone,
+			is_active, created_at, updated_at
+		)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
 	`
 
 	user.ID = uuid.New()
@@ -33,14 +52,15 @@ func (r *userRepository) Create(user *domain.User) error {
 		user.Name,
 		user.Email,
 		user.Password,
+		user.RoleID,
+		user.Phone,
 		user.IsActive,
 		user.CreatedAt,
 		user.UpdatedAt,
-		user.Role,
 	)
 
 	if err != nil {
-		logger.ErrorLogger.Println("failed insert user:", err)
+		logger.ErrorLogger.Println("[USER_REPO][Create] error:", err)
 		return err
 	}
 
@@ -48,10 +68,8 @@ func (r *userRepository) Create(user *domain.User) error {
 }
 
 func (r *userRepository) GetByEmail(email string) (*domain.User, error) {
-	query := `
-		SELECT id, name, email, password, is_active, created_at, updated_at, role
-		FROM users
-		WHERE email = $1
+	query := baseUserQuery + `
+		WHERE u.email = $1
 	`
 
 	row := r.db.QueryRow(query, email)
@@ -63,32 +81,31 @@ func (r *userRepository) GetByEmail(email string) (*domain.User, error) {
 		&user.Name,
 		&user.Email,
 		&user.Password,
+		&user.RoleID,
+		&user.RoleName,
+		&user.Phone,
 		&user.IsActive,
 		&user.CreatedAt,
 		&user.UpdatedAt,
-		&user.Role,
 	)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			logger.ErrorLogger.Println(err)
 			return nil, nil
 		}
-		logger.ErrorLogger.Println(err)
+		logger.ErrorLogger.Println("[USER_REPO][GetByEmail] error:", err)
 		return nil, err
 	}
 
 	return &user, nil
 }
 
-func (r *userRepository) GetByID(email string) (*domain.User, error) {
-	query := `
-		SELECT id, name, email, password, is_active, created_at, updated_at, role
-		FROM users
-		WHERE id = $1
+func (r *userRepository) GetByID(id string) (*domain.User, error) {
+	query := baseUserQuery + `
+		WHERE u.id = $1
 	`
 
-	row := r.db.QueryRow(query, email)
+	row := r.db.QueryRow(query, id)
 
 	var user domain.User
 
@@ -97,18 +114,19 @@ func (r *userRepository) GetByID(email string) (*domain.User, error) {
 		&user.Name,
 		&user.Email,
 		&user.Password,
+		&user.RoleID,
+		&user.RoleName,
+		&user.Phone,
 		&user.IsActive,
 		&user.CreatedAt,
 		&user.UpdatedAt,
-		&user.Role,
 	)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			logger.ErrorLogger.Println(err)
 			return nil, nil
 		}
-		logger.ErrorLogger.Println(err)
+		logger.ErrorLogger.Println("[USER_REPO][GetByID] error:", err)
 		return nil, err
 	}
 

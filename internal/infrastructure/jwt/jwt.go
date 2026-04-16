@@ -14,10 +14,11 @@ var secretKey = []byte(os.Getenv("JWT_SECRET"))
 type Claims struct {
 	UserID string `json:"user_id"`
 	Email  string `json:"email"`
+	Role   string `json:"role"`
 	jwt.RegisteredClaims
 }
 
-func GenerateToken(userID, email string) (string, int, error) {
+func GenerateToken(userID, email, role string) (string, int, error) {
 	expStr := os.Getenv("JWT_EXP")
 
 	expSec, err := strconv.Atoi(expStr)
@@ -30,6 +31,7 @@ func GenerateToken(userID, email string) (string, int, error) {
 	claims := Claims{
 		UserID: userID,
 		Email:  email,
+		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

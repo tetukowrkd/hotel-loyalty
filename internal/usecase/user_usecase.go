@@ -8,6 +8,7 @@ import (
 	"hotel-loyalty/internal/domain"
 	"hotel-loyalty/internal/infrastructure/jwt"
 	"hotel-loyalty/internal/infrastructure/logger"
+	"hotel-loyalty/internal/mapper"
 	"hotel-loyalty/internal/model/response"
 	"hotel-loyalty/internal/pkg/errors"
 	"hotel-loyalty/internal/pkg/hash"
@@ -26,39 +27,34 @@ func NewUserUsecase(userRepo repository.UserRepository, tokenRepo repository.Tok
 	}
 }
 
-func (u *UserUsecase) Register(user *domain.User) error {
-	// 1. cek email sudah ada atau belum
+func (u *UserUsecase) Register(user *domain.User) (*response.RegisterUserResponse, error) {
 	existingUser, err := u.userRepo.GetByEmail(user.Email)
 	if err != nil {
 		logger.ErrorLogger.Println("[USER_USECASE][GetByEmail] Error:", err)
-		return errors.ErrInternal
+		return nil, errors.ErrInternal
 	}
 
 	if existingUser != nil {
-		logger.InfoLogger.Println("[USER_USECASE][Register] Email Already Exists:", user.Email)
-		return errors.ErrEmailExists
+		return nil, errors.ErrEmailExists
 	}
 
-	// 2. hash password
 	hashedPassword, err := hash.HashPassword(user.Password)
 	if err != nil {
-		logger.ErrorLogger.Println("[USER_USECASE][HashPassword] Error:", err)
-		return errors.ErrInternal
+		return nil, errors.ErrInternal
 	}
 
 	user.Password = hashedPassword
 	user.IsActive = true
 
-	// 3. insert ke DB
-	err = u.userRepo.Create(user)
-	if err != nil {
-		logger.ErrorLogger.Println("[USER_USECASE][CreateUser] Error:", err)
-		return errors.ErrInternal
+	// 🔥 SET DEFAULT ROLE (USER)
+	memberRoleID := uuid.MustParse("11111111-1111-1111-1111-111111111111")
+	user.RoleID = &memberRoleID
+
+	if err := u.userRepo.Create(user); err != nil {
+		return nil, errors.ErrInternal
 	}
 
-	logger.InfoLogger.Println("[USER_USECASE][Register] User Created:", user.Email)
-
-	return nil
+	return mapper.ToRegisterResponse(user), nil
 }
 
 func (u *UserUsecase) Login(email, password string) (*response.LoginResponse, error) {
@@ -77,7 +73,7 @@ func (u *UserUsecase) Login(email, password string) (*response.LoginResponse, er
 		return nil, errors.ErrBadRequest
 	}
 
-	accessToken, accessTTL, err := jwt.GenerateToken(user.ID.String(), user.Email)
+	accessToken, accessTTL, err := jwt.GenerateToken(user.ID.String(), user.Email, user.RoleName)
 	if err != nil {
 		return nil, errors.ErrInternal
 	}
@@ -128,44 +124,42 @@ func (u *UserUsecase) RefreshToken(refreshToken string) (*response.RefreshRespon
 
 	tokenData, err := u.tokenRepo.FindByRefreshToken(hashedToken)
 	if err != nil {
-		logger.ErrorLogger.Println("[USER_USECASE][RefreshToken] Find:", err)
 		return nil, errors.ErrInternal
 	}
 
 	if tokenData == nil {
-		return nil, errors.ErrInternal
+		return nil, errors.ErrBadRequest
 	}
 
 	if time.Now().After(tokenData.ExpiresAt) {
-		logger.InfoLogger.Println("[USER_USECASE][RefreshToken] expired token:", tokenData.UserID)
-		return nil, errors.ErrInternal
+		return nil, errors.ErrBadRequest
 	}
 
 	user, err := u.userRepo.GetByID(tokenData.UserID.String())
 	if err != nil {
-		logger.ErrorLogger.Println("[USER_USECASE][RefreshToken] GetUser:", err)
 		return nil, errors.ErrInternal
 	}
 
 	if user == nil {
-		return nil, errors.ErrInternal
+		return nil, errors.ErrBadRequest
 	}
 
-	// 🔐 new access token
-	newAccessToken, accessTTL, err := jwt.GenerateToken(user.ID.String(), user.Email)
+	// 🔐 access token baru (WITH ROLE)
+	newAccessToken, accessTTL, err := jwt.GenerateToken(
+		user.ID.String(),
+		user.Email,
+		user.RoleName,
+	)
 	if err != nil {
-		logger.ErrorLogger.Println("[USER_USECASE][RefreshToken] GenerateToken:", err)
 		return nil, errors.ErrInternal
 	}
 
-	// 🔁 new refresh token
+	// 🔁 refresh token baru
 	newRefreshToken := uuid.New().String()
 	hashedNew := hash.HashToken(newRefreshToken)
 
 	// delete old
-	if err := u.tokenRepo.DeleteByRefreshToken(hashedToken); err != nil {
-		logger.ErrorLogger.Println("[USER_USECASE][RefreshToken] Delete:", err)
-	}
+	_ = u.tokenRepo.DeleteByRefreshToken(hashedToken)
 
 	// save new
 	token := &domain.UserToken{
@@ -176,15 +170,12 @@ func (u *UserUsecase) RefreshToken(refreshToken string) (*response.RefreshRespon
 	}
 
 	if err := u.tokenRepo.Save(token); err != nil {
-		logger.ErrorLogger.Println("[USER_USECASE][RefreshToken] Save:", err)
 		return nil, errors.ErrInternal
 	}
 
-	logger.InfoLogger.Println("[USER_USECASE][RefreshToken] success:", user.Email)
-
 	return &response.RefreshResponse{
 		AccessToken:  newAccessToken,
-		RefreshToken: refreshToken,
+		RefreshToken: newRefreshToken, // 🔥 FIXED
 		ExpiresIn:    accessTTL,
 	}, nil
 }
