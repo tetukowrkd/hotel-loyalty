@@ -22,6 +22,11 @@ func SetupRouter(c *Container) http.Handler {
 		r.Use(middleware.JWTMiddleware)
 
 		r.Get("/profile", c.UserHandler.Profile)
+		// 🔥 admin only
+		//r.With(middleware.RequireRole("admin")).Get("/admin/dashboard", adminHandler.Dashboard)
+
+		// 🔥 staff + admin
+		//r.With(middleware.RequireRole("staff", "admin")).Post("/checkin", checkinHandler.Validate)
 	})
 
 	return r
