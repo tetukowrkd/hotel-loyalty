@@ -9,13 +9,19 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var secretKey = []byte(os.Getenv("JWT_SECRET"))
+var secretKey []byte
+var tokenExp time.Duration
 
 type Claims struct {
 	UserID string `json:"user_id"`
 	Email  string `json:"email"`
 	Role   string `json:"role"`
 	jwt.RegisteredClaims
+}
+
+func InitJWT(secret string, exp int) {
+	secretKey = []byte(secret)
+	tokenExp = time.Duration(exp) * time.Second
 }
 
 func GenerateToken(userID, email, role string) (string, int, error) {
@@ -26,14 +32,12 @@ func GenerateToken(userID, email, role string) (string, int, error) {
 		expSec = 3600 // fallback
 	}
 
-	expirationTime := time.Now().Add(time.Duration(expSec) * time.Second)
-
 	claims := Claims{
 		UserID: userID,
 		Email:  email,
 		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(expirationTime),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(tokenExp)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 	}

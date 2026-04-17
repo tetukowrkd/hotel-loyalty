@@ -1,9 +1,12 @@
 package config
 
 type Config struct {
-	DBHost     string
-	DBPort     string
-	DBUser     string
-	DBPassword string
-	DBName     string
+	DBHost          string
+	DBPort          string
+	DBUser          string
+	DBPassword      string
+	DBName          string
+	JWTSecret       string
+	JWTExp          int
+	RefreshTokenExp int
 }

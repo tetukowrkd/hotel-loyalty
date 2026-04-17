@@ -21,12 +21,15 @@ import (
 type UserUsecase struct {
 	userRepo  repository.UserRepository
 	tokenRepo repository.TokenRepository
+
+	refreshTokenExp time.Duration
 }
 
-func NewUserUsecase(userRepo repository.UserRepository, tokenRepo repository.TokenRepository) *UserUsecase {
+func NewUserUsecase(userRepo repository.UserRepository, tokenRepo repository.TokenRepository, refreshExp int) *UserUsecase {
 	return &UserUsecase{
-		userRepo:  userRepo,
-		tokenRepo: tokenRepo,
+		userRepo:        userRepo,
+		tokenRepo:       tokenRepo,
+		refreshTokenExp: time.Duration(refreshExp) * time.Second,
 	}
 }
 
@@ -118,7 +121,7 @@ func (u *UserUsecase) Login(email, password string) (*response.LoginResponse, er
 		ID:           uuid.New(),
 		UserID:       user.ID,
 		RefreshToken: hashedToken,
-		ExpiresAt:    time.Now().Add(7 * 24 * time.Hour),
+		ExpiresAt:    time.Now().Add(u.refreshTokenExp),
 	}
 
 	err = u.tokenRepo.Save(token)
@@ -195,7 +198,7 @@ func (u *UserUsecase) RefreshToken(refreshToken string) (*response.RefreshRespon
 		ID:           uuid.New(),
 		UserID:       user.ID,
 		RefreshToken: hashedNew,
-		ExpiresAt:    time.Now().Add(7 * 24 * time.Hour),
+		ExpiresAt:    time.Now().Add(u.refreshTokenExp),
 	}
 
 	if err := u.tokenRepo.Save(token); err != nil {

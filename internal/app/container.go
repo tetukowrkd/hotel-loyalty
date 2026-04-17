@@ -1,26 +1,34 @@
 package app
 
 import (
-	"database/sql"
-
+	"hotel-loyalty/internal/config"
 	"hotel-loyalty/internal/delivery/http/handler"
+	"hotel-loyalty/internal/infrastructure/database"
+	"hotel-loyalty/internal/infrastructure/logger"
 	"hotel-loyalty/internal/repository/postgres"
 	"hotel-loyalty/internal/usecase"
 )
 
 type Container struct {
+	UserUsecase *usecase.UserUsecase
 	UserHandler *handler.UserHandler
 }
 
-func NewContainer(db *sql.DB) *Container {
-	// repo
+func NewContainer(cfg *config.Config) *Container {
+	db, err := database.NewPostgresDB(cfg)
+	if err != nil {
+		logger.ErrorLogger.Fatal("[CONTAINER] DB error:", err)
+	}
+
 	userRepo := postgres.NewUserRepository(db)
 	tokenRepo := postgres.NewTokenRepository(db)
 
-	// usecase
-	userUsecase := usecase.NewUserUsecase(userRepo, tokenRepo)
+	userUsecase := usecase.NewUserUsecase(
+		userRepo,
+		tokenRepo,
+		cfg.RefreshTokenExp,
+	)
 
-	// handler
 	userHandler := handler.NewUserHandler(userUsecase)
 
 	return &Container{
