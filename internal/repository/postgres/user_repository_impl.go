@@ -19,10 +19,11 @@ const baseUserQuery = `
 		u.name,
 		u.email,
 		u.password,
+		u.member_code,
+		u.loyalty_points,
 		u.role_id,
 		r.name AS role_name,
 		u.phone,
-		u.member_code,
 		u.is_active,
 		u.created_at,
 		u.updated_at
@@ -37,10 +38,12 @@ func NewUserRepository(db *sql.DB) *userRepository {
 func (r *userRepository) Create(user *domain.User) error {
 	query := `
 		INSERT INTO users (
-			id, name, email, password, role_id, phone, member_code,
-			is_active, created_at, updated_at
+			id, name, email, password, phone,
+			member_code, loyalty_points,
+			role_id, is_active,
+			created_at, updated_at
 		)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
 	`
 
 	user.ID = uuid.New()
@@ -53,9 +56,10 @@ func (r *userRepository) Create(user *domain.User) error {
 		user.Name,
 		user.Email,
 		user.Password,
-		user.RoleID,
 		user.Phone,
 		user.MemberCode,
+		user.LoyaltyPoints,
+		user.RoleID,
 		user.IsActive,
 		user.CreatedAt,
 		user.UpdatedAt,
@@ -83,10 +87,11 @@ func (r *userRepository) GetByEmail(email string) (*domain.User, error) {
 		&user.Name,
 		&user.Email,
 		&user.Password,
+		&user.MemberCode,
+		&user.LoyaltyPoints,
 		&user.RoleID,
 		&user.RoleName,
 		&user.Phone,
-		&user.MemberCode,
 		&user.IsActive,
 		&user.CreatedAt,
 		&user.UpdatedAt,
@@ -117,10 +122,11 @@ func (r *userRepository) GetByID(id string) (*domain.User, error) {
 		&user.Name,
 		&user.Email,
 		&user.Password,
+		&user.MemberCode,
+		&user.LoyaltyPoints,
 		&user.RoleID,
 		&user.RoleName,
 		&user.Phone,
-		&user.MemberCode,
 		&user.IsActive,
 		&user.CreatedAt,
 		&user.UpdatedAt,
@@ -131,6 +137,38 @@ func (r *userRepository) GetByID(id string) (*domain.User, error) {
 			return nil, nil
 		}
 		logger.ErrorLogger.Println("[USER_REPO][GetByID] error:", err)
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (r *userRepository) GetByMemberCode(code string) (*domain.User, error) {
+	query := baseUserQuery + ` WHERE u.member_code = $1`
+
+	row := r.db.QueryRow(query, code)
+
+	var user domain.User
+
+	err := row.Scan(
+		&user.ID,
+		&user.Name,
+		&user.Email,
+		&user.Password,
+		&user.MemberCode,
+		&user.LoyaltyPoints,
+		&user.RoleID,
+		&user.RoleName,
+		&user.Phone,
+		&user.IsActive,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
 		return nil, err
 	}
 

@@ -6,4 +6,5 @@ type UserRepository interface {
 	Create(user *domain.User) error
 	GetByEmail(email string) (*domain.User, error)
 	GetByID(id string) (*domain.User, error)
+	GetByMemberCode(code string) (*domain.User, error)
 }
