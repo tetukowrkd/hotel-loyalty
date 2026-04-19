@@ -2,16 +2,18 @@ package app
 
 import (
 	"hotel-loyalty/internal/config"
-	"hotel-loyalty/internal/delivery/http/handler"
+	handlerIdentity "hotel-loyalty/internal/delivery/http/handler/identity"
 	"hotel-loyalty/internal/infrastructure/database"
 	"hotel-loyalty/internal/infrastructure/logger"
 	"hotel-loyalty/internal/repository/postgres"
-	"hotel-loyalty/internal/usecase"
+	usecaseIdentity "hotel-loyalty/internal/usecase/identity"
 )
 
 type Container struct {
-	UserUsecase *usecase.UserUsecase
-	UserHandler *handler.UserHandler
+	UserUsecase  *usecaseIdentity.UserUsecase
+	UserHandler  *handlerIdentity.UserHandler
+	TokenUsecase *usecaseIdentity.TokenUsecase
+	TokenHandler *handlerIdentity.TokenHandler
 }
 
 func NewContainer(cfg *config.Config) *Container {
@@ -23,15 +25,23 @@ func NewContainer(cfg *config.Config) *Container {
 	userRepo := postgres.NewUserRepository(db)
 	tokenRepo := postgres.NewTokenRepository(db)
 
-	userUsecase := usecase.NewUserUsecase(
+	userUsecase := usecaseIdentity.NewUserUsecase(
 		userRepo,
 		tokenRepo,
 		cfg.RefreshTokenExp,
 	)
 
-	userHandler := handler.NewUserHandler(userUsecase)
+	tokenUsecase := usecaseIdentity.NewTokenUsecase(
+		userRepo,
+		tokenRepo,
+		cfg.RefreshTokenExp,
+	)
+
+	userHandler := handlerIdentity.NewUserHandler(userUsecase)
+	tokenHandler := handlerIdentity.NewTokenHandler(tokenUsecase)
 
 	return &Container{
-		UserHandler: userHandler,
+		UserHandler:  userHandler,
+		TokenHandler: tokenHandler,
 	}
 }

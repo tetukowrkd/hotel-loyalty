@@ -15,7 +15,7 @@ func SetupRouter(c *Container) http.Handler {
 		r.Post("/register", c.UserHandler.Register)
 		r.Post("/login", c.UserHandler.Login)
 		r.Post("/logout", c.UserHandler.Logout)
-		r.Post("/refresh", c.UserHandler.RefreshToken)
+		r.Post("/refresh", c.TokenHandler.RefreshToken)
 	})
 
 	r.Route("/member", func(r chi.Router) {

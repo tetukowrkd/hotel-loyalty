@@ -1,9 +1,10 @@
-package handler
+package identity
 
 import (
 	"encoding/json"
 	"net/http"
 
+	"hotel-loyalty/internal/delivery/http/handler"
 	"hotel-loyalty/internal/infrastructure/jwt"
 	"hotel-loyalty/internal/infrastructure/logger"
 	"hotel-loyalty/internal/infrastructure/middleware"
@@ -12,14 +13,14 @@ import (
 	"hotel-loyalty/internal/model/request"
 	"hotel-loyalty/internal/model/response"
 	"hotel-loyalty/internal/pkg/errors"
-	"hotel-loyalty/internal/usecase"
+	usecaseIdentity "hotel-loyalty/internal/usecase/identity"
 )
 
 type UserHandler struct {
-	userUsecase *usecase.UserUsecase
+	userUsecase *usecaseIdentity.UserUsecase
 }
 
-func NewUserHandler(userUsecase *usecase.UserUsecase) *UserHandler {
+func NewUserHandler(userUsecase *usecaseIdentity.UserUsecase) *UserHandler {
 	return &UserHandler{
 		userUsecase: userUsecase,
 	}
@@ -39,7 +40,7 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 🔥 pakai helper validation
-	if !ValidateRequest(w, req) {
+	if !handler.ValidateRequest(w, req) {
 		logger.ErrorLogger.Println("[HANDLER][RefreshToken] validation failed")
 		return
 	}
@@ -78,7 +79,7 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !ValidateRequest(w, req) {
+	if !handler.ValidateRequest(w, req) {
 		return
 	}
 
@@ -118,41 +119,6 @@ func (h *UserHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	logger.InfoLogger.Println("[HANDLER][Logout] success")
 
 	response.WriteJSON(w, http.StatusOK, model.Success("Logout Success", nil))
-}
-
-func (h *UserHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
-	var req request.RefreshTokenRequest
-
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		logger.ErrorLogger.Println("[HANDLER][RefreshToken] invalid body:", err)
-
-		response.WriteJSON(w, http.StatusBadRequest, model.Error("Invalid Request Body", nil))
-		return
-	}
-
-	if !ValidateRequest(w, req) {
-		logger.ErrorLogger.Println("[HANDLER][RefreshToken] validation failed")
-		return
-	}
-
-	resp, err := h.userUsecase.RefreshToken(req.RefreshToken)
-	if err != nil {
-		logger.ErrorLogger.Println("[HANDLER][RefreshToken] error:", err)
-
-		if appErr, ok := err.(*errors.AppError); ok {
-			response.WriteJSON(w, appErr.Code, model.Error(appErr.Message, nil))
-			return
-		}
-
-		response.WriteJSON(w, http.StatusInternalServerError, model.Error("Internal Server Error", nil))
-		return
-	}
-
-	logger.InfoLogger.Println("[HANDLER][RefreshToken] success")
-
-	response.WriteJSON(w, http.StatusOK, model.Success("Token Refreshed", resp))
 }
 
 func (h *UserHandler) Profile(w http.ResponseWriter, r *http.Request) {
