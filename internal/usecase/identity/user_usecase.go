@@ -21,14 +21,16 @@ import (
 type UserUsecase struct {
 	userRepo  repository.UserRepository
 	tokenRepo repository.TokenRepository
+	roleRepo  repository.RoleRepository
 
 	refreshTokenExp time.Duration
 }
 
-func NewUserUsecase(userRepo repository.UserRepository, tokenRepo repository.TokenRepository, refreshExp int) *UserUsecase {
+func NewUserUsecase(userRepo repository.UserRepository, tokenRepo repository.TokenRepository, roleRepo repository.RoleRepository, refreshExp int) *UserUsecase {
 	return &UserUsecase{
 		userRepo:        userRepo,
 		tokenRepo:       tokenRepo,
+		roleRepo:        roleRepo,
 		refreshTokenExp: time.Duration(refreshExp) * time.Second,
 	}
 }
@@ -54,10 +56,20 @@ func (u *UserUsecase) Register(user *domain.User) (*response.RegisterUserRespons
 	user.Password = hashedPassword
 	user.IsActive = true
 
-	// 🔥 default role
-	memberRoleID := uuid.MustParse("11111111-1111-1111-1111-111111111111")
-	user.RoleID = &memberRoleID
-	user.RoleName = "member"
+	// default kalau kosong
+	if user.RoleName == "" {
+		user.RoleName = "member"
+	}
+
+	// lookup role
+	role, err := u.roleRepo.GetByName(user.RoleName)
+	if err != nil {
+		logger.ErrorLogger.Println("[USER_USECASE][Register][Role] error:", err)
+		return nil, errors.ErrInternal
+	}
+
+	user.RoleID = &role.ID
+	user.RoleName = role.Name
 
 	var createErr error
 

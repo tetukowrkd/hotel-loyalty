@@ -26,6 +26,7 @@ func LoadConfig() *Config {
 		DBUser:          os.Getenv("DB_USER"),
 		DBPassword:      os.Getenv("DB_PASSWORD"),
 		DBName:          os.Getenv("DB_NAME"),
+		BaseUrl:         os.Getenv("BASE_URL"),
 		JWTSecret:       os.Getenv("JWT_SECRET"),
 		JWTExp:          jwtExp,
 		RefreshTokenExp: refreshExp,

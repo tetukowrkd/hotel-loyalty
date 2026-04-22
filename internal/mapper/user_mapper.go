@@ -12,6 +12,7 @@ func ToUserDomain(req request.RegisterUserRequest) *domain.User {
 		Email:    req.Email,
 		Password: req.Password,
 		Phone:    req.Phone,
+		RoleName: req.RoleName,
 	}
 }
 

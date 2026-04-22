@@ -6,6 +6,7 @@ type Config struct {
 	DBUser          string
 	DBPassword      string
 	DBName          string
+	BaseUrl         string
 	JWTSecret       string
 	JWTExp          int
 	RefreshTokenExp int

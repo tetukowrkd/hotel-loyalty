@@ -43,3 +43,10 @@ var (
 		Message: "Forbidden",
 	}
 )
+
+func NewBadRequest(msg string) *AppError {
+	return &AppError{
+		Code:    http.StatusBadRequest,
+		Message: msg,
+	}
+}
