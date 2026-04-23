@@ -10,4 +10,5 @@ type Config struct {
 	JWTSecret       string
 	JWTExp          int
 	RefreshTokenExp int
+	Origins         string
 }

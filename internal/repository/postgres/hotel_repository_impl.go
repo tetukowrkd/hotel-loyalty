@@ -64,14 +64,22 @@ func (r *hotelRepository) List(city string, star int, limit, offset int) ([]resp
 
 	// 🔥 main query
 	query := `
-	SELECT h.id, h.name, h.city, h.country, h.star_rating,
-	       COALESCE(hi.image_url, '')
-	FROM hotels h
-	LEFT JOIN hotel_images hi 
-		ON hi.hotel_id = h.id 
-		AND hi.is_primary = true
-	WHERE h.status = 'published'
-	AND h.deleted_at IS NULL
+		SELECT 
+			h.id, 
+			h.name, 
+			h.description,        -- 🔥 TAMBAHIN
+			h.address,            -- 🔥 TAMBAHIN
+			h.city, 
+			h.country, 
+			h.star_rating,
+			COALESCE(hi.image_url, '')
+		FROM hotels h
+		LEFT JOIN hotel_images hi 
+			ON hi.hotel_id = h.id 
+			AND hi.is_primary = true
+			AND hi.deleted_at IS NULL
+		WHERE h.status = 'published'
+		AND h.deleted_at IS NULL
 	`
 
 	// 🔥 count query
@@ -121,7 +129,7 @@ func (r *hotelRepository) List(city string, star int, limit, offset int) ([]resp
 
 	for rows.Next() {
 		var h response.HotelListItem
-		err := rows.Scan(&h.ID, &h.Name, &h.City, &h.Country, &h.StarRating, &h.ImageURL)
+		err := rows.Scan(&h.ID, &h.Name, &h.Description, &h.Adresses, &h.City, &h.Country, &h.StarRating, &h.ImageURL)
 		if err != nil {
 			return nil, 0, err
 		}

@@ -2,6 +2,7 @@ package hotel
 
 import (
 	stdErrors "errors"
+	"os"
 
 	"database/sql"
 	"hotel-loyalty/internal/domain"
@@ -67,6 +68,15 @@ func (u *HotelUsecase) List(city string, star int, limit, offset int) ([]respons
 	if err != nil {
 		logger.ErrorLogger.Println("[USECASE][Hotel][List] failed:", err)
 		return nil, 0, errors.ErrInternal
+	}
+
+	// 🔥 mapping image_url → full URL
+	baseURL := os.Getenv("BASE_URL")
+
+	for i := range data {
+		if data[i].ImageURL != "" {
+			data[i].ImageURL = baseURL + data[i].ImageURL
+		}
 	}
 
 	logger.InfoLogger.Println(

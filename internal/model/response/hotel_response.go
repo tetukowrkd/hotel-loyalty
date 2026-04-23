@@ -20,12 +20,14 @@ type CreateHotelResponse struct {
 }
 
 type HotelListItem struct {
-	ID         uuid.UUID `json:"id"`
-	Name       string    `json:"name"`
-	City       string    `json:"city"`
-	Country    string    `json:"country"`
-	StarRating int       `json:"star_rating"`
-	ImageURL   string    `json:"image_url"`
+	ID          uuid.UUID `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	Adresses    string    `json:"addresses"`
+	City        string    `json:"city"`
+	Country     string    `json:"country"`
+	StarRating  int       `json:"star_rating"`
+	ImageURL    string    `json:"image_url"`
 }
 
 type HotelDetailResponse struct {

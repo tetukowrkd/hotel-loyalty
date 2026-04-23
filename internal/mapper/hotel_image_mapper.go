@@ -17,7 +17,7 @@ func ToHotelImageResponse(u *domain.HotelImage) *response.CreateHotelImageRespon
 	return &response.CreateHotelImageResponse{
 		ID:        u.ID,
 		HotelID:   u.HotelID,
-		ImageURL:  imageURL,
+		ImageURL:  baseURL + imageURL,
 		IsPrimary: u.IsPrimary,
 		SortOrder: u.SortOrder,
 	}

@@ -30,6 +30,7 @@ func LoadConfig() *Config {
 		JWTSecret:       os.Getenv("JWT_SECRET"),
 		JWTExp:          jwtExp,
 		RefreshTokenExp: refreshExp,
+		Origins:         os.Getenv("CORS_ALLOWED_ORIGINS"),
 	}
 }
 

@@ -2,6 +2,10 @@ package app
 
 import (
 	"net/http"
+	"os"
+	"strings"
+
+	"github.com/go-chi/cors"
 
 	"hotel-loyalty/internal/infrastructure/middleware"
 
@@ -10,6 +14,26 @@ import (
 
 func SetupRouter(c *Container) http.Handler {
 	r := chi.NewRouter()
+
+	// 🔥 ambil dari env + normalize
+	raw := strings.Split(os.Getenv("CORS_ALLOWED_ORIGINS"), ",")
+
+	var origins []string
+	for _, o := range raw {
+		origins = append(origins, strings.TrimSpace(o))
+	}
+
+	// 🔥 pasang CORS middleware
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   origins,
+		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
+		AllowCredentials: true,
+	}))
+
+	// 🔥 static files
+	fs := http.FileServer(http.Dir("./storage"))
+	r.Handle("/storage/*", http.StripPrefix("/storage/", fs))
 
 	// 🔥 AUTH
 	r.Route("/auth", func(r chi.Router) {
