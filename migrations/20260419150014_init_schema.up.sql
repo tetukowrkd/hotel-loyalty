@@ -126,7 +126,7 @@ CREATE TABLE hotel_images (
 
 CREATE UNIQUE INDEX unique_primary_image
 ON hotel_images (hotel_id)
-WHERE is_primary = true;
+WHERE is_primary = true AND deleted_at IS NULL;
 
 CREATE INDEX idx_hotel_images_hotel_id ON hotel_images(hotel_id);
 CREATE INDEX idx_hotel_images_deleted_at ON hotel_images(deleted_at);
@@ -137,11 +137,16 @@ CREATE INDEX idx_hotel_images_deleted_at ON hotel_images(deleted_at);
 
 CREATE TABLE rooms (
   id UUID PRIMARY KEY,
-  hotel_id UUID,
+  hotel_id UUID NOT NULL,
+
   name VARCHAR NOT NULL,
   description TEXT,
-  capacity INT CHECK (capacity > 0),
+  capacity INT NOT NULL CHECK (capacity > 0),
+
   base_price DECIMAL(12,2) NOT NULL,
+
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   deleted_at TIMESTAMP NULL,
 
   CONSTRAINT fk_rooms_hotel FOREIGN KEY (hotel_id) REFERENCES hotels(id) ON DELETE CASCADE
@@ -162,7 +167,7 @@ CREATE TABLE room_images (
 
 CREATE UNIQUE INDEX unique_room_primary
 ON room_images (room_id)
-WHERE is_primary = true;
+WHERE is_primary = true AND deleted_at iS NULL;
 
 CREATE INDEX idx_room_images_deleted_at ON room_images(deleted_at);
 
@@ -200,9 +205,13 @@ CREATE INDEX idx_hfm_deleted_at ON hotel_facility_maps(deleted_at);
 
 CREATE TABLE room_inventory (
   id UUID PRIMARY KEY,
-  room_id UUID,
-  date DATE,
-  available_stock INT CHECK (available_stock >= 0),
+  room_id UUID NOT NULL,
+
+  date DATE NOT NULL,
+  available_stock INT NOT NULL CHECK (available_stock >= 0),
+
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   deleted_at TIMESTAMP NULL,
 
   CONSTRAINT fk_inventory_room FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
@@ -216,9 +225,13 @@ CREATE INDEX idx_room_inventory_deleted_at ON room_inventory(deleted_at);
 
 CREATE TABLE room_prices (
   id UUID PRIMARY KEY,
-  room_id UUID,
-  date DATE,
-  price DECIMAL(12,2),
+  room_id UUID NOT NULL,
+
+  date DATE NOT NULL,
+  price DECIMAL(12,2) NOT NULL,
+
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   deleted_at TIMESTAMP NULL,
 
   CONSTRAINT fk_prices_room FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
@@ -260,6 +273,9 @@ CREATE TABLE booking_items (
   qty INT CHECK (qty > 0),
   price_per_night DECIMAL(12,2),
   total_price DECIMAL(12,2),
+
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   deleted_at TIMESTAMP NULL,
 
   CONSTRAINT fk_booking_items_booking FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
@@ -362,6 +378,9 @@ CREATE TABLE promotions (
   value DECIMAL(12,2),
   start_date DATE,
   end_date DATE,
+
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   deleted_at TIMESTAMP NULL
 );
 
@@ -374,6 +393,9 @@ CREATE INDEX idx_promotions_deleted_at ON promotions(deleted_at);
 CREATE TABLE wishlists (
   user_id UUID,
   hotel_id UUID,
+
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   deleted_at TIMESTAMP NULL,
 
   PRIMARY KEY (user_id, hotel_id),

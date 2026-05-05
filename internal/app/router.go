@@ -75,6 +75,10 @@ func SetupRouter(c *Container) http.Handler {
 			// facilities
 			r.Post("/{hotel_id}/facilities", c.HotelFacilityHandler.Assign)
 
+			// create rooms
+			r.Post("/{hotel_id}/rooms", c.RoomHandler.Create)
+			r.Delete("/rooms/{room_id}", c.RoomHandler.Delete)
+
 		})
 	})
 
@@ -93,6 +97,8 @@ func SetupRouter(c *Container) http.Handler {
 		r.Get("/{hotel_id}", c.HotelHandler.GetByID)
 
 		r.Get("/{hotel_id}/facilities", c.HotelFacilityHandler.GetByHotel)
+
+		r.Get("/{hotel_id}/rooms", c.RoomHandler.List)
 	})
 
 	// 🔥 MASTER DATA

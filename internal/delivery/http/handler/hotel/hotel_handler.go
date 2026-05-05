@@ -206,14 +206,26 @@ func (h *HotelHandler) Publish(w http.ResponseWriter, r *http.Request) {
 func (h *HotelHandler) Delete(w http.ResponseWriter, r *http.Request) {
 
 	idStr := chi.URLParam(r, "hotel_id")
-	id, err := uuid.Parse(idStr)
+
+	hotelID, err := uuid.Parse(idStr)
 	if err != nil {
-		response.WriteJSON(w, http.StatusBadRequest, model.Error("Invalid ID", nil))
+		logger.InfoLogger.Println(
+			"[HANDLER][Hotel][Delete] invalid hotel_id",
+			"value", idStr,
+		)
+
+		response.WriteJSON(w, http.StatusBadRequest, model.Error("Invalid hotel ID", nil))
 		return
 	}
 
-	err = h.hotelUsecase.Delete(id)
+	err = h.hotelUsecase.Delete(hotelID)
 	if err != nil {
+		logger.ErrorLogger.Println(
+			"[HANDLER][Hotel][Delete] failed",
+			"hotelID", hotelID,
+			"error", err,
+		)
+
 		if appErr, ok := err.(*errors.AppError); ok {
 			response.WriteJSON(w, appErr.Code, model.Error(appErr.Message, nil))
 			return
@@ -222,6 +234,11 @@ func (h *HotelHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		response.WriteJSON(w, http.StatusInternalServerError, model.Error("Internal Server Error", nil))
 		return
 	}
+
+	logger.InfoLogger.Println(
+		"[HANDLER][Hotel][Delete] success",
+		"hotelID", hotelID,
+	)
 
 	response.WriteJSON(w, http.StatusOK, model.Success("Hotel deleted", nil))
 }
