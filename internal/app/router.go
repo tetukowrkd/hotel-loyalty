@@ -61,23 +61,22 @@ func SetupRouter(c *Container) http.Handler {
 
 		r.Route("/hotels", func(r chi.Router) {
 
-			// create hotel
+			// Hotel
 			r.Post("/", c.HotelHandler.Create)
-			// delete hotel
 			r.Delete("/{hotel_id}", c.HotelHandler.Delete)
 
-			// images
+			// Images
 			r.Post("/{hotel_id}/images", c.HotelImageHandler.Create)
 			r.Patch("/{hotel_id}/images/{image_id}/primary", c.HotelImageHandler.SetPrimary)
-			// delete image
 			r.Delete("/{hotel_id}/images/{image_id}", c.HotelImageHandler.Delete)
 
 			// facilities
 			r.Post("/{hotel_id}/facilities", c.HotelFacilityHandler.Assign)
 
-			// create rooms
+			// rooms
 			r.Post("/{hotel_id}/rooms", c.RoomHandler.Create)
 			r.Delete("/rooms/{room_id}", c.RoomHandler.Delete)
+			r.Post("/rooms/{room_id}/inventory", c.RoomHandler.SetInventory)
 
 		})
 	})

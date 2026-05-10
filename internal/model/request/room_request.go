@@ -11,3 +11,9 @@ type CreateRoomRequest struct {
 	Capacity    int     `json:"capacity"`
 	BasePrice   float64 `json:"base_price"`
 }
+
+type SetInventoryRequest struct {
+	StartDate string `json:"start_date"` // YYYY-MM-DD
+	EndDate   string `json:"end_date"`
+	Stock     int    `json:"stock"`
+}

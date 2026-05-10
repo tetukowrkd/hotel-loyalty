@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"hotel-loyalty/internal/domain"
 	"hotel-loyalty/internal/infrastructure/logger"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -50,29 +51,6 @@ func (r *roomRepository) Create(h *domain.Room) error {
 	return nil
 }
 
-func (r *roomRepository) Delete(roomID uuid.UUID) error {
-	query := `
-		UPDATE rooms
-		SET deleted_at = NOW()
-		WHERE id = $1 AND deleted_at IS NULL
-	`
-
-	res, err := r.db.Exec(query, roomID)
-	if err != nil {
-		logger.ErrorLogger.Println("[REPO][Room][Delete] error:", err)
-		return err
-	}
-
-	rows, _ := res.RowsAffected()
-	if rows == 0 {
-		return sql.ErrNoRows
-	}
-
-	logger.InfoLogger.Println("[REPO][Room][Delete] success:", roomID)
-
-	return nil
-}
-
 func (r *roomRepository) ListByHotelID(hotelID uuid.UUID) ([]domain.Room, error) {
 
 	query := `
@@ -107,4 +85,69 @@ func (r *roomRepository) ListByHotelID(hotelID uuid.UUID) ([]domain.Room, error)
 	}
 
 	return rooms, nil
+}
+
+func (r *roomRepository) Delete(roomID uuid.UUID) error {
+	query := `
+		UPDATE rooms
+		SET deleted_at = NOW()
+		WHERE id = $1 AND deleted_at IS NULL
+	`
+
+	res, err := r.db.Exec(query, roomID)
+	if err != nil {
+		logger.ErrorLogger.Println("[REPO][Room][Delete] error:", err)
+		return err
+	}
+
+	rows, _ := res.RowsAffected()
+	if rows == 0 {
+		return sql.ErrNoRows
+	}
+
+	logger.InfoLogger.Println("[REPO][Room][Delete] success:", roomID)
+
+	return nil
+}
+
+func (r *roomRepository) UpsertInventory(roomID uuid.UUID, date time.Time, stock int) error {
+	query := `
+		INSERT INTO room_inventory (id, room_id, date, available_stock)
+		VALUES ($1, $2, $3, $4)
+		ON CONFLICT (room_id, date)
+		DO UPDATE SET available_stock = EXCLUDED.available_stock
+	`
+
+	_, err := r.db.Exec(
+		query,
+		uuid.New(),
+		roomID,
+		date,
+		stock,
+	)
+
+	if err != nil {
+		logger.ErrorLogger.Println("[REPO][Inventory][Upsert] failed:", err)
+		return err
+	}
+
+	return nil
+}
+
+func (r *roomRepository) Exists(roomID uuid.UUID) (bool, error) {
+	query := `
+		SELECT EXISTS (
+			SELECT 1 FROM rooms
+			WHERE id = $1 AND deleted_at IS NULL
+		)
+	`
+
+	var exists bool
+	err := r.db.QueryRow(query, roomID).Scan(&exists)
+	if err != nil {
+		logger.ErrorLogger.Println("[REPO][Room][Exists] error:", err)
+		return false, err
+	}
+
+	return exists, nil
 }

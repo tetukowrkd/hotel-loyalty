@@ -11,6 +11,7 @@ import (
 	"hotel-loyalty/internal/pkg/errors"
 	usecaseRoom "hotel-loyalty/internal/usecase/room"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -152,4 +153,72 @@ func (h *RoomHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	)
 
 	response.WriteJSON(w, http.StatusOK, model.Success("Room deleted", nil))
+}
+
+func (h *RoomHandler) SetInventory(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	roomIDStr := chi.URLParam(r, "room_id")
+
+	roomID, err := uuid.Parse(roomIDStr)
+	if err != nil {
+		logger.InfoLogger.Println(
+			"[HANDLER][Inventory] invalid room_id",
+			"value", roomIDStr,
+		)
+
+		response.WriteJSON(w, http.StatusBadRequest, model.Error("Invalid room ID", nil))
+		return
+	}
+
+	var req request.SetInventoryRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		logger.ErrorLogger.Println(
+			"[HANDLER][Inventory] invalid body",
+			"error", err,
+		)
+
+		response.WriteJSON(w, http.StatusBadRequest, model.Error("Invalid request body", nil))
+		return
+	}
+
+	start, err := time.Parse("2006-01-02", req.StartDate)
+	if err != nil {
+		response.WriteJSON(w, http.StatusBadRequest, model.Error("Invalid start_date format (YYYY-MM-DD)", nil))
+		return
+	}
+
+	end, err := time.Parse("2006-01-02", req.EndDate)
+	if err != nil {
+		response.WriteJSON(w, http.StatusBadRequest, model.Error("Invalid end_date format (YYYY-MM-DD)", nil))
+		return
+	}
+
+	err = h.roomUsecase.SetInventory(roomID, start, end, req.Stock)
+	if err != nil {
+		logger.ErrorLogger.Println(
+			"[HANDLER][Inventory] failed",
+			"roomID", roomID,
+			"error", err,
+		)
+
+		if appErr, ok := err.(*errors.AppError); ok {
+			response.WriteJSON(w, appErr.Code, model.Error(appErr.Message, nil))
+			return
+		}
+
+		response.WriteJSON(w, http.StatusInternalServerError, model.Error("Internal Server Error", nil))
+		return
+	}
+
+	logger.InfoLogger.Println(
+		"[HANDLER][Inventory] success",
+		"roomID", roomID,
+		"start", req.StartDate,
+		"end", req.EndDate,
+		"stock", req.Stock,
+	)
+
+	response.WriteJSON(w, http.StatusOK, model.Success("Inventory set", nil))
 }

@@ -110,3 +110,59 @@ func (u *RoomUsecase) Delete(id uuid.UUID) error {
 
 	return nil
 }
+
+func (u *RoomUsecase) SetInventory(roomID uuid.UUID, start, end time.Time, stock int) error {
+
+	// 🔥 normalize date
+	start = start.Truncate(24 * time.Hour)
+	end = end.Truncate(24 * time.Hour)
+
+	// 🔥 validation
+	if end.Before(start) {
+		return errors.NewBadRequest("End date must be after start date")
+	}
+
+	if stock < 0 {
+		return errors.NewBadRequest("Stock must be >= 0")
+	}
+
+	if end.Sub(start).Hours()/24 > 365 {
+		return errors.NewBadRequest("Date range too large")
+	}
+
+	// 🔥 check room exist
+	exists, err := u.roomRepo.Exists(roomID)
+	if err != nil {
+		return errors.ErrInternal
+	}
+	if !exists {
+		return errors.NewBadRequest("Room not found")
+	}
+
+	current := start
+
+	for !current.After(end) {
+		err := u.roomRepo.UpsertInventory(roomID, current, stock)
+		if err != nil {
+			logger.ErrorLogger.Println(
+				"[USECASE][Inventory] failed",
+				"roomID", roomID,
+				"date", current,
+				"error", err,
+			)
+			return errors.ErrInternal
+		}
+
+		current = current.AddDate(0, 0, 1)
+	}
+
+	logger.InfoLogger.Println(
+		"[USECASE][Inventory] success",
+		"roomID", roomID,
+		"start", start,
+		"end", end,
+		"stock", stock,
+	)
+
+	return nil
+}
